@@ -11,12 +11,12 @@ class Book24Spider(scrapy.Spider):
 
     def parse(self, response):
         links = response.xpath('//div[@class="product-card__image-holder"]/a/@href').extract()
+        total_pages = re.findall(r'\d+', re.search(r'totalPages:\d+,', response.text).group())[0]
         for link in links:
             yield response.follow(self.url + link, callback=self.parse_item)
-        next_page = response.xpath('//a[contains(text(), "Вперед")]/@href').extract_first()
 
-        if next_page:
-            yield response.follow(self.url + next_page, callback=self.parse)
+        for page in range(2, int(total_pages)+1):
+            yield response.follow(self.url + '/novie-knigi/page-%s' % page, callback=self.parse)
 
     @staticmethod
     def parse_item(response: HtmlResponse):
